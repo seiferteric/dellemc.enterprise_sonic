@@ -11,7 +11,7 @@
         gather_subset: min
         gather_network_resources:
           - pki
-      register: results
+      register: result
 
     - name: "debug facts"
       debug:
