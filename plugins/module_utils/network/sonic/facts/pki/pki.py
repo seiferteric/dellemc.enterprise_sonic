@@ -93,25 +93,25 @@ class PkiFacts(object):
         :rtype: dictionary
         :returns: The generated config
         """
-        config = deepcopy(spec)
-        config['name'] = utils.parse_conf_arg(conf, 'resource')
-        config['some_string'] = utils.parse_conf_arg(conf, 'a_string')
+        #config = deepcopy(spec)
+        #config['name'] = utils.parse_conf_arg(conf, 'resource')
+        #config['some_string'] = utils.parse_conf_arg(conf, 'a_string')
 
-        match = re.match(r'.*key is property01 (\S+)',
-                         conf, re.MULTILINE | re.DOTALL)
-        if match:
-            config['some_dict']['property_01'] = match.groups()[0]
+        #match = re.match(r'.*key is property01 (\S+)',
+        #                 conf, re.MULTILINE | re.DOTALL)
+        #if match:
+        #    config['some_dict']['property_01'] = match.groups()[0]
 
-        a_bool = utils.parse_conf_arg(conf, 'a_bool')
-        if a_bool == 'true':
-            config['some_bool'] = True
-        elif a_bool == 'false':
-            config['some_bool'] = False
-        else:
-            config['some_bool'] = None
+        #a_bool = utils.parse_conf_arg(conf, 'a_bool')
+        #if a_bool == 'true':
+        #    config['some_bool'] = True
+        #elif a_bool == 'false':
+        #    config['some_bool'] = False
+        #else:
+        #    config['some_bool'] = None
 
-        try:
-            config['some_int'] = int(utils.parse_conf_arg(conf, 'an_int'))
-        except TypeError:
-            config['some_int'] = None
+        #try:
+        #    config['some_int'] = int(utils.parse_conf_arg(conf, 'an_int'))
+        #except TypeError:
+        #    config['some_int'] = None
         return utils.remove_empties(config)
