@@ -93,7 +93,7 @@ class PkiFacts(object):
         :rtype: dictionary
         :returns: The generated config
         """
-        #config = deepcopy(spec)
+        config = deepcopy(spec)
         #config['name'] = utils.parse_conf_arg(conf, 'resource')
         #config['some_string'] = utils.parse_conf_arg(conf, 'a_string')
 
