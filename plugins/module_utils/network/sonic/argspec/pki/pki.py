@@ -34,24 +34,37 @@ class PkiArgs(object):  # pylint: disable=R0903
     def __init__(self, **kwargs):
         pass
 
-    argument_spec = {'config': {'options': {'security-profiles': {'elements': 'dict',
-                                              'options': {'cdp-list': {'elements': 'str',
-                                                                       'type': 'list'},
-                                                          'certificate-name': {'type': 'str'},
-                                                          'key-usage-check': {'type': 'bool'},
-                                                          'ocsp-responder-list': {'elements': 'str',
-                                                                                  'type': 'list'},
-                                                          'peer-name-check': {'type': 'bool'},
-                                                          'profile-name': {'type': 'str'},
-                                                          'revocation-check': {'type': 'bool'},
-                                                          'trust-store': {'type': 'str'}},
-                                              'type': 'list'},
-                        'trust-stores': {'elements': 'dict',
-                                         'options': {'ca-name': {'elements': 'str',
-                                                                 'type': 'list'},
-                                                     'name': {'type': 'str'}},
-                                         'type': 'list'}},
-            'type': 'dict'},
- 'state': {'choices': ['merged', 'deleted'],
-           'default': 'merged',
-           'type': 'str'}}  # pylint: disable=C0301
+    argument_spec = {
+        'config': {
+            'options': {
+                'security-profiles': {
+                    'elements': 'dict',
+                    'options': {
+                        'cdp-list': {'elements': 'str', 'type': 'list'},
+                        'certificate-name': {'type': 'str'},
+                        'key-usage-check': {'type': 'bool'},
+                        'ocsp-responder-list': {'elements': 'str', 'type': 'list'},
+                        'peer-name-check': {'type': 'bool'},
+                        'profile-name': {'type': 'str'},
+                        'revocation-check': {'type': 'bool'},
+                        'trust-store': {'type': 'str'}
+                    },
+                    'type': 'list'
+                },
+                'trust-stores': {
+                    'elements': 'dict',
+                    'options': {
+                        'ca-name': {'elements': 'str', 'type': 'list'},
+                        'name': {'type': 'str'}
+                    },
+                    'type': 'list'
+                }
+            },
+            'type': 'dict'
+        },
+        'state': {
+            'choices': ['merged', 'deleted'],
+            'default': 'merged',
+            'type': 'str'
+        }
+    }  # pylint: disable=C0301
