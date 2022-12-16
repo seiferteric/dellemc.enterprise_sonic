@@ -16,3 +16,14 @@
     - name: "debug facts"
       debug:
         msg: "{{ result.ansible_facts.ansible_network_resources }}"
+
+- name: PKI Delete Config
+  hosts: datacenter
+  gather_facts: False
+  connection: httpapi
+  collections:
+    - dellemc.enterprise_sonic
+  tasks:
+    - name: "Delete"
+      sonic_pki:
+        state: deleted

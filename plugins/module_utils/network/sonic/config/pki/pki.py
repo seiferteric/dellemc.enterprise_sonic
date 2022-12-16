@@ -18,6 +18,10 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.u
 )
 from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.sonic.facts.facts import Facts
 
+trust_stores_path="/data/sonic-pki:sonic-pki/TRUST_STORES"
+security_profiles_path="/data/sonic-pki:sonic-pki/SECURITY_PROFILES"
+#trust_store_path=f'/data/sonic-pki:sonic-pki/TRUST_STORES/TRUST_STORES_LIST={name}'
+#security_profile_path=f'/data/sonic-pki:sonic-pki/SECURITY_PROFILES/SECURITY_PROFILES_LIST={name}'
 
 class Pki(ConfigBase):
     """
@@ -152,5 +156,9 @@ class Pki(ConfigBase):
         :returns: the commands necessary to remove the current configuration
                   of the provided objects
         """
+        want = False
         commands = []
+        if not want:
+            commands.append({"path": trust_stores_path, "method": "delete", "data": ""})
+            commands.append({"path": security_profiles_path, "method": "delete", "data": ""})
         return commands

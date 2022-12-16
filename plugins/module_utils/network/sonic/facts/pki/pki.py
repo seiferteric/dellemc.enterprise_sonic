@@ -20,7 +20,8 @@ from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.s
     to_request,
     edit_config
 )
-security_profiles_path = '/data/sonic-pki:pki/SECURITY_PROFILES'
+pki_path = '/data/sonic-pki:sonic-pki/'
+security_profiles_path = '/data/sonic-pki:sonic-pki/SECURITY_PROFILES'
 
 class PkiFacts(object):
     """ The sonic pki fact class
@@ -52,31 +53,23 @@ class PkiFacts(object):
             pass
 
         if not data:
-            # typically data is populated from the current device configuration
-            # data = connection.get('show running-config | section ^interface')
-            # using mock data instead
-            data = ("resource rsrc_a\n"
-                    "  a_bool true\n"
-                    "  a_string choice_a\n"
-                    "  resource here\n"
-                    "resource rscrc_b\n"
-                    "  key is property01 value is value end\n"
-                    "  an_int 10\n")
+            result = self.get_pki()
+            code, resources = result[0]
 
-        # split the config into instances of the resource
-        resource_delim = 'resource'
-        find_pattern = r'(?:^|\n)%s.*?(?=(?:^|\n)%s|$)' % (resource_delim,
-                                                           resource_delim)
-        resources = [p.strip() for p in re.findall(find_pattern,
-                                                   data,
-                                                   re.DOTALL)]
-
-        objs = []
-        for resource in resources:
-            if resource:
-                obj = self.render_config(self.generated_spec, resource)
-                if obj:
-                    objs.append(obj)
+        objs = {}
+        #for resource in resources:
+        #    if resource:
+        #        obj = self.render_config(self.generated_spec, resource)
+        #        if obj:
+        #            objs.append(obj)
+        if resources.get('sonic-pki:sonic-pki') \
+                and resources.get('sonic-pki:sonic-pki').get('SECURITY_PROFILES') \
+                and resources.get('sonic-pki:sonic-pki').get('SECURITY_PROFILES').get('SECURITY_PROFILES_LIST') :
+            objs['security-profiles'] = resources.get('sonic-pki:sonic-pki').get('SECURITY_PROFILES').get('SECURITY_PROFILES_LIST')
+        if resources.get('sonic-pki:sonic-pki') \
+                and resources.get('sonic-pki:sonic-pki').get('TRUST_STORES') \
+                and resources.get('sonic-pki:sonic-pki').get('TRUST_STORES').get('TRUST_STORES_LIST') :
+            objs['trust-stores'] = resources.get('sonic-pki:sonic-pki').get('TRUST_STORES').get('TRUST_STORES_LIST')
 
         ansible_facts['ansible_network_resources'].pop('pki', None)
         facts = {}
@@ -86,13 +79,16 @@ class PkiFacts(object):
 
         ansible_facts['ansible_network_resources'].update(facts)
 
-        request = {'path': security_profiles_path, 'method': 'get'}
-        try:
-            response = edit_config(module, to_request(module, request))
-        except ConnectionError as exc:
-            module.fail_json(msg=str(exc), code=exc.code)
 
-        #return ansible_facts
+        return ansible_facts
+
+    def get_pki(self):
+        request = {'path': pki_path, 'method': 'get'}
+        try:
+            response = edit_config(self._module, to_request(self._module, request))
+        except ConnectionError as exc:
+            self._module.fail_json(msg=str(exc), code=exc.code)
+        
         return response
 
     def render_config(self, spec, conf):
@@ -105,25 +101,7 @@ class PkiFacts(object):
         :rtype: dictionary
         :returns: The generated config
         """
+        #print(spec)
+        #print(conf)
         config = deepcopy(spec)
-        #config['name'] = utils.parse_conf_arg(conf, 'resource')
-        #config['some_string'] = utils.parse_conf_arg(conf, 'a_string')
-
-        #match = re.match(r'.*key is property01 (\S+)',
-        #                 conf, re.MULTILINE | re.DOTALL)
-        #if match:
-        #    config['some_dict']['property_01'] = match.groups()[0]
-
-        #a_bool = utils.parse_conf_arg(conf, 'a_bool')
-        #if a_bool == 'true':
-        #    config['some_bool'] = True
-        #elif a_bool == 'false':
-        #    config['some_bool'] = False
-        #else:
-        #    config['some_bool'] = None
-
-        #try:
-        #    config['some_int'] = int(utils.parse_conf_arg(conf, 'an_int'))
-        #except TypeError:
-        #    config['some_int'] = None
         return utils.remove_empties(config)

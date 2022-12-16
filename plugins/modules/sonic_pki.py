@@ -57,14 +57,14 @@ options:
           name:
             type: str
             description: The name of the Trust Store
-          ca-names:
+          ca-name:
             type: list
             elements: str
             description: List of CA certificates in the trust store.
       security-profiles:
         description: Application Security Profiles
-        type: dict
-        elements: list
+        type: list
+        elements: dict
         suboptions:
           profile-name:
             type: str

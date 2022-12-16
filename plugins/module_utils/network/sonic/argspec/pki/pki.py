@@ -34,7 +34,7 @@ class PkiArgs(object):  # pylint: disable=R0903
     def __init__(self, **kwargs):
         pass
 
-    argument_spec = {'config': {'options': {'security-profiles': {'elements': 'list',
+    argument_spec = {'config': {'options': {'security-profiles': {'elements': 'dict',
                                               'options': {'cdp-list': {'elements': 'str',
                                                                        'type': 'list'},
                                                           'certificate-name': {'type': 'str'},
@@ -45,10 +45,13 @@ class PkiArgs(object):  # pylint: disable=R0903
                                                           'profile-name': {'type': 'str'},
                                                           'revocation-check': {'type': 'bool'},
                                                           'trust-store': {'type': 'str'}},
-                                              'type': 'dict'},
+                                              'type': 'list'},
                         'trust-stores': {'elements': 'dict',
-                                         'options': {'ca-names': {'elements': 'str',
-                                                                  'type': 'list'},
+                                         'options': {'ca-name': {'elements': 'str',
+                                                                 'type': 'list'},
                                                      'name': {'type': 'str'}},
                                          'type': 'list'}},
-            'type': 'dict'}}  # pylint: disable=C0301
+            'type': 'dict'},
+ 'state': {'choices': ['merged', 'deleted'],
+           'default': 'merged',
+           'type': 'str'}}  # pylint: disable=C0301
