@@ -35,6 +35,7 @@ class FactsArgs(object):  # pylint: disable=R0903
         'bgp_ext_communities',
         'mclag',
         'prefix_lists',
+        'vlan_mapping',
         'vrfs',
         'vxlans',
         'users',
@@ -47,6 +48,17 @@ class FactsArgs(object):  # pylint: disable=R0903
         'ntp',
         'logging',
         'pki'
+        'ip_neighbor',
+        'port_group',
+        'dhcp_relay',
+        'acl_interfaces',
+        'l2_acls',
+        'l3_acls',
+        'lldp_global',
+        'mac',
+        'bfd',
+        'copp',
+        'route_maps'
     ]
 
     argument_spec = {

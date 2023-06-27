@@ -67,6 +67,7 @@ options:
       - bgp_ext_communities
       - mclag
       - prefix_lists
+      - vlan_mapping
       - vrfs
       - vxlans
       - users
@@ -79,6 +80,17 @@ options:
       - ntp
       - logging
       - pki
+      - ip_neighbor
+      - port_group
+      - dhcp_relay
+      - acl_interfaces
+      - l2_acls
+      - l3_acls
+      - lldp_global
+      - mac
+      - bfd
+      - copp
+      - route_maps
 """
 
 EXAMPLES = """
