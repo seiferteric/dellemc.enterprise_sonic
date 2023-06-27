@@ -20,8 +20,8 @@ from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.s
 
 trust_stores_path="/data/sonic-pki:sonic-pki/TRUST_STORES"
 security_profiles_path="/data/sonic-pki:sonic-pki/SECURITY_PROFILES"
-#trust_store_path=f'/data/sonic-pki:sonic-pki/TRUST_STORES/TRUST_STORES_LIST={name}'
-#security_profile_path=f'/data/sonic-pki:sonic-pki/SECURITY_PROFILES/SECURITY_PROFILES_LIST={name}'
+trust_store_path='/data/sonic-pki:sonic-pki/TRUST_STORES/TRUST_STORES_LIST'
+security_profile_path=f'/data/sonic-pki:sonic-pki/SECURITY_PROFILES/SECURITY_PROFILES_LIST'
 
 class Pki(ConfigBase):
     """
@@ -107,10 +107,10 @@ class Pki(ConfigBase):
             commands = self._state_overridden(**kwargs)
         elif state == 'deleted':
             kwargs = {}
-            commands = self._state_deleted(**kwargs)
+            commands = self._state_deleted(want, have)
         elif state == 'merged':
-            kwargs = {}
-            commands = self._state_merged(**kwargs)
+            
+            commands = self._state_merged(want)
         elif state == 'replaced':
             kwargs = {}
             commands = self._state_replaced(**kwargs)
@@ -138,7 +138,7 @@ class Pki(ConfigBase):
         return commands
 
     @staticmethod
-    def _state_merged(**kwargs):
+    def _state_merged(self, want):
         """ The command generator when state is merged
 
         :rtype: A list
@@ -146,10 +146,17 @@ class Pki(ConfigBase):
                   the current configuration
         """
         commands = []
+        if want and want.get('trust-stores'):
+            for ts in want.get('trust-stores'):
+                commands.append({"path": trust_store_path, "method": "patch", "data": {"sonic-pki:TRUST_STORES_LIST": [ts]}})
+        if want and want.get('security-profiles'):
+            for sp in want.get('security-profiles'):
+                commands.append({"path": security_profile_path, "method": "patch", "data": {"sonic-pki:SECURITY_PROFILES_LIST": [sp]}})
+        
         return commands
 
     @staticmethod
-    def _state_deleted(**kwargs):
+    def _state_deleted(self, want, have):
         """ The command generator when state is deleted
 
         :rtype: A list
@@ -161,4 +168,7 @@ class Pki(ConfigBase):
         if not want:
             commands.append({"path": trust_stores_path, "method": "delete", "data": ""})
             commands.append({"path": security_profiles_path, "method": "delete", "data": ""})
+        else:
+            
+
         return commands

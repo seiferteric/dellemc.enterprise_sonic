@@ -1,7 +1,7 @@
 ---
 - name: PKI Facts Test
   hosts: datacenter
-  gather_facts: True
+  gather_facts: true
   connection: httpapi
   collections:
     - dellemc.enterprise_sonic
@@ -17,13 +17,33 @@
       debug:
         msg: "{{ result.ansible_facts.ansible_network_resources }}"
 
-- name: PKI Delete Config
+- name: PKI Merge Config
   hosts: datacenter
-  gather_facts: False
+  gather_facts: false
   connection: httpapi
   collections:
     - dellemc.enterprise_sonic
   tasks:
-    - name: "Delete"
+    - name: "Merge"
       sonic_pki:
-        state: deleted
+        state: merged
+        config:
+          trust-stores:
+            - name: a
+              ca-name:
+                - CAcert.crt
+          security-profiles:
+            - profile-name: EricProf
+              revocation-check: true
+              key-usage-check: false
+              certificate-name: server.crt
+#- name: PKI Delete Config
+#  hosts: datacenter
+#  gather_facts: false
+#  connection: httpapi
+#  collections:
+#    - dellemc.enterprise_sonic
+#  tasks:
+#    - name: "Delete"
+#      sonic_pki:
+#        state: deleted
