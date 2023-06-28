@@ -18,10 +18,10 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.u
 )
 from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.sonic.facts.facts import Facts
 
-trust_stores_path="/data/sonic-pki:sonic-pki/TRUST_STORES"
-security_profiles_path="/data/sonic-pki:sonic-pki/SECURITY_PROFILES"
-trust_store_path='/data/sonic-pki:sonic-pki/TRUST_STORES/TRUST_STORES_LIST'
-security_profile_path=f'/data/sonic-pki:sonic-pki/SECURITY_PROFILES/SECURITY_PROFILES_LIST'
+trust_stores_path="/data/openconfig-pki:pki/trust-stores"
+security_profiles_path="/data/openconfig-pki:pki/security-profiles"
+trust_store_path="/data/openconfig-pki:pki/trust-stores/trust-store"
+security_profile_path="/data/openconfig-pki:pki/security-profiles/security-profile"
 
 class Pki(ConfigBase):
     """
@@ -169,6 +169,7 @@ class Pki(ConfigBase):
             commands.append({"path": trust_stores_path, "method": "delete", "data": ""})
             commands.append({"path": security_profiles_path, "method": "delete", "data": ""})
         else:
+            pass
             
 
         return commands
