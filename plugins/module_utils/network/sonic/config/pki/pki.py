@@ -148,7 +148,7 @@ class Pki(ConfigBase):
                 commands.append({"path": trust_store_path, "method": "patch", "data": {"sonic-pki:TRUST_STORES_LIST": [ts]}})
         if want and want.get('security-profiles'):
             for sp in want.get('security-profiles'):
-                commands.append({"path": security_profile_path, "method": "patch", "data": {"openconfig-pki:security-profile": [sp]}})
+                commands.append({"path": security_profile_path, "method": "patch", "data": {"openconfig-pki:security-profile": [{"config": sp}]}})
         
         return commands
 
