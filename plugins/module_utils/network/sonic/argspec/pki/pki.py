@@ -55,8 +55,7 @@ class PkiArgs(object):  # pylint: disable=R0903
                             'type': 'dict'
                             
 
-                        },
-                        'profile-name': {'type': 'string'}
+                        }
                     },
                     'type': 'list'
                 
