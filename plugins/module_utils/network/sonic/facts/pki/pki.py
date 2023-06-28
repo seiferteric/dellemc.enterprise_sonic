@@ -65,7 +65,7 @@ class PkiFacts(object):
         if resources.get('openconfig-pki:pki') \
                 and resources.get('openconfig-pki:pki').get('security-profiles') \
                 and resources.get('openconfig-pki:pki').get('security-profiles').get('security-profile') :
-            objs['security-profiles'] = resources.get('openconfig-pki:pki').get('security-profiles').get('security-profile')
+            objs['security-profiles'] = resources.get('openconfig-pki:pki').get('security-profiles')#.get('security-profile')
         if resources.get('openconfig-pki:pki') \
                 and resources.get('openconfig-pki:pki').get('trust-stores') \
                 and resources.get('openconfig-pki:pki').get('trust-stores').get('trust-store') :
