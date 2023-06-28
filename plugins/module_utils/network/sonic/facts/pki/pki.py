@@ -70,7 +70,8 @@ class PkiFacts(object):
         if resources.get('openconfig-pki:pki') \
                 and resources.get('openconfig-pki:pki').get('trust-stores') \
                 and resources.get('openconfig-pki:pki').get('trust-stores').get('trust-store') :
-            objs['trust-stores'] = resources.get('openconfig-pki:pki').get('trust-stores').get('trust-store')
+            tsts = resources.get('openconfig-pki:pki').get('trust-stores').get('trust-store')
+            objs['trust-stores'] = [r.get("config") for r in tsts]
 
         ansible_facts['ansible_network_resources'].pop('pki', None)
         facts = {}
