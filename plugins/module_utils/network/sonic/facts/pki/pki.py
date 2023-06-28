@@ -20,8 +20,8 @@ from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.s
     to_request,
     edit_config
 )
-pki_path = '/data/sonic-pki:sonic-pki/'
-security_profiles_path = '/data/sonic-pki:sonic-pki/SECURITY_PROFILES'
+pki_path = '/data/openconfig-pki:pki/'
+security_profiles_path = '/data/openconfig-pki:pki/security-profiles'
 
 class PkiFacts(object):
     """ The sonic pki fact class
@@ -62,14 +62,14 @@ class PkiFacts(object):
         #        obj = self.render_config(self.generated_spec, resource)
         #        if obj:
         #            objs.append(obj)
-        if resources.get('sonic-pki:sonic-pki') \
-                and resources.get('sonic-pki:sonic-pki').get('SECURITY_PROFILES') \
-                and resources.get('sonic-pki:sonic-pki').get('SECURITY_PROFILES').get('SECURITY_PROFILES_LIST') :
-            objs['security-profiles'] = resources.get('sonic-pki:sonic-pki').get('SECURITY_PROFILES').get('SECURITY_PROFILES_LIST')
-        if resources.get('sonic-pki:sonic-pki') \
-                and resources.get('sonic-pki:sonic-pki').get('TRUST_STORES') \
-                and resources.get('sonic-pki:sonic-pki').get('TRUST_STORES').get('TRUST_STORES_LIST') :
-            objs['trust-stores'] = resources.get('sonic-pki:sonic-pki').get('TRUST_STORES').get('TRUST_STORES_LIST')
+        if resources.get('openconfig-pki:pki') \
+                and resources.get('openconfig-pki:pki').get('security-profiles') \
+                and resources.get('openconfig-pki:pki').get('security-profiles').get('security-profile') :
+            objs['security-profiles'] = resources.get('openconfig-pki:pki').get('security-profiles').get('security-profile')
+        if resources.get('openconfig-pki:pki') \
+                and resources.get('openconfig-pki:pki').get('trust-stores') \
+                and resources.get('openconfig-pki:pki').get('trust-stores').get('trust-store') :
+            objs['trust-stores'] = resources.get('openconfig-pki:pki').get('trust-stores').get('trust-store')
 
         ansible_facts['ansible_network_resources'].pop('pki', None)
         facts = {}
