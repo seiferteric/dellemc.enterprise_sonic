@@ -59,7 +59,7 @@ class PkiArgs(object):  # pylint: disable=R0903
                         'profile-name': {'type': 'string'}
                     },
                     'type': 'list'
-                }
+                
                 },
                 'trust-stores': {
                     'elements': 'dict',
