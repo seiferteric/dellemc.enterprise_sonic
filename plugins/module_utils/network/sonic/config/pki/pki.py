@@ -156,7 +156,7 @@ class Pki(ConfigBase):
         return commands
 
     @staticmethod
-    def _state_deleted(self, want, have):
+    def _state_deleted(self, want=None, have=None):
         """ The command generator when state is deleted
 
         :rtype: A list
