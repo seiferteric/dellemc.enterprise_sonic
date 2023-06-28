@@ -52,7 +52,7 @@ class PkiArgs(object):  # pylint: disable=R0903
                                 'revocation-check': {'type': 'bool'},
                                 'trust-store': {'type': 'str'}
                             },
-                            'type': 'dict'
+                            'type': 'list'
                             
 
                         }
