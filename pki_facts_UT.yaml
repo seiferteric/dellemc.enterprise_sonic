@@ -30,13 +30,15 @@
         config:
           trust-stores:
             - name: a
-              ca-name:
-                - CAcert.crt
+              config:
+                - ca-name:
+                    - CAcert.crt
           security-profiles:
             - profile-name: EricProf
-              revocation-check: true
-              key-usage-check: false
-              certificate-name: server.crt
+              config:
+                - revocation-check: true
+                  key-usage-check: false
+                  certificate-name: server.crt
 #- name: PKI Delete Config
 #  hosts: datacenter
 #  gather_facts: false
