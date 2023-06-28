@@ -115,7 +115,6 @@ class Pki(ConfigBase):
             kwargs = {}
             commands = self._state_replaced(**kwargs)
         return commands
-    @staticmethod
     def _state_replaced(**kwargs):
         """ The command generator when state is replaced
 
@@ -126,7 +125,6 @@ class Pki(ConfigBase):
         commands = []
         return commands
 
-    @staticmethod
     def _state_overridden(**kwargs):
         """ The command generator when state is overridden
 
@@ -137,7 +135,6 @@ class Pki(ConfigBase):
         commands = []
         return commands
 
-    @staticmethod
     def _state_merged(self, want):
         """ The command generator when state is merged
 
@@ -155,7 +152,6 @@ class Pki(ConfigBase):
         
         return commands
 
-    @staticmethod
     def _state_deleted(self, want, have):
         """ The command generator when state is deleted
 
