@@ -81,7 +81,7 @@ class Pki(ConfigBase):
         commands = list()
 
         existing_pki_facts = self.get_pki_facts()
-        commands.extend(self.set_config(existing_pki_facts))
+        commands, requests = self.set_config(existing_pki_facts)
         if commands and len(requests) > 0:
             if not self._module.check_mode:
                 try:
