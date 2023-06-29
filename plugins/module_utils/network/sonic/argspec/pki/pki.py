@@ -64,7 +64,7 @@ class PkiArgs(object):  # pylint: disable=R0903
             'type': 'dict'
         },
         'state': {
-            'choices': ['merged', 'deleted'],
+            'choices': ['merged', 'deleted', 'replaced', 'overridden'],
             'default': 'merged',
             'type': 'str'
         }
