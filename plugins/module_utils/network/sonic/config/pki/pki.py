@@ -152,7 +152,7 @@ class Pki(ConfigBase):
 
         add_commands = []
         if replaced_config:
-            del_requests = self.get_delete_tacacs_server_requests(replaced_config, have)
+            del_requests = self.get_delete_pki_requests(replaced_config, have)
             requests.extend(del_requests)
             commands.extend(update_states(replaced_config, "deleted"))
             add_commands = want
@@ -160,7 +160,7 @@ class Pki(ConfigBase):
             add_commands = diff
 
         if add_commands:
-            add_requests = self.get_modify_tacacs_server_requests(add_commands, have)
+            add_requests = self.get_modify_pki_requests(add_commands, have)
             if len(add_requests) > 0:
                 requests.extend(add_requests)
                 commands.extend(update_states(add_commands, "replaced"))
@@ -212,3 +212,37 @@ class Pki(ConfigBase):
             
 
         return commands
+    def get_delete_security_profiles(self, command, have):
+        requests = []
+        url = security_profile_path + "="
+
+        mat_sp = []
+        if have.get('security-profiles', None) and have['security-profiles'].get('profile-name', None):
+            mat_sp = have['security-profiles']['profile-name']
+
+        sps = []
+        if command.get('security-profiles', None):
+            if command['security-profiles'].get('profile-name', None):
+                sps = command['security-profiles']['profile-name']
+            else:
+                sps = mat_sp
+
+        if mat_sp and sps:
+            for sp in sps:
+                if next((m_sp for m_sp in mat_sp if m_sp['profile-name'] == sp['profile-name']), None):
+                    requests.append({'path': url + sp['profile-name'], 'method': DELETE})
+
+        return requests
+
+
+    def get_delete_pki_requests(self, command, have):
+        requests = []
+        if not command:
+            return requests
+
+        requests.extend(self.get_delete_security_profiles(command, have))
+        #requests.extend(self.get_delete_trust_stores(command, have))
+
+        return requests
+
+
