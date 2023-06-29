@@ -164,6 +164,7 @@ class Pki(ConfigBase):
         #    if len(add_requests) > 0:
         #        requests.extend(add_requests)
         #        commands.extend(update_states(add_commands, "replaced"))
+        requests.append({"path": security_profiles_path, "method": "delete", "data": ""})
 
         return commands, requests
 
