@@ -231,6 +231,22 @@ class Pki(ConfigBase):
                     requests.append({'path': url + sp, 'method': DELETE})
 
         return requests
+    def get_delete_trust_stores(self, command, have):
+        requests = []
+        url = trust_store_path + "="
+        mat_sp = [sp.get("name") for sp in have.get("trust-stores", []) if sp.get("name")]
+
+        if command.get("trust-stores") and command.get("trust-stores") != None:
+            sps = [sp.get("name") for sp in command.get("trust-stores", []) if sp.get("name")]
+        else:
+            sps = mat_sp
+
+        if mat_sp and sps:
+            for sp in sps:
+                if next((m_sp for m_sp in mat_sp if m_sp == sp), None):
+                    requests.append({'path': url + sp, 'method': DELETE})
+
+        return requests
 
     def get_modify_pki_requests(self, command, have):
         return []
@@ -241,7 +257,7 @@ class Pki(ConfigBase):
             return requests
 
         requests.extend(self.get_delete_security_profiles(command, have))
-        #requests.extend(self.get_delete_trust_stores(command, have))
+        requests.extend(self.get_delete_trust_stores(command, have))
 
         return requests
 
