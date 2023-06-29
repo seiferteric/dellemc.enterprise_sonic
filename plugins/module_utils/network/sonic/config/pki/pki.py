@@ -134,6 +134,7 @@ class Pki(ConfigBase):
         elif state == 'merged':
             commands, requests = self._state_merged(want, have, diff)
         elif state == 'replaced':
+            import epdb; epdb.serve()
             commands, requests = self._state_replaced(want, have, diff)
         return commands, requests
 
