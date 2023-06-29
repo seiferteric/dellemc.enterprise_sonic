@@ -148,16 +148,16 @@ class Pki(ConfigBase):
         """
         commands = []
         requests = []
-        replaced_config = get_replaced_config(want, have, TEST_KEYS)
+        #replaced_config = get_replaced_config(want, have, TEST_KEYS)
 
-        add_commands = []
-        if replaced_config:
-            del_requests = self.get_delete_pki_requests(replaced_config, have)
-            requests.extend(del_requests)
-            commands.extend(update_states(replaced_config, "deleted"))
-            add_commands = want
-        else:
-            add_commands = diff
+        #add_commands = []
+        #if replaced_config:
+        #    del_requests = self.get_delete_pki_requests(replaced_config, have)
+        #    requests.extend(del_requests)
+        #    commands.extend(update_states(replaced_config, "deleted"))
+        #    add_commands = want
+        #else:
+        #    add_commands = diff
 
         #if add_commands:
         #    add_requests = self.get_modify_pki_requests(add_commands, have)
