@@ -17,11 +17,29 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.u
     to_list,
 )
 from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.sonic.facts.facts import Facts
+from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.sonic.sonic import (
+    to_request,
+    edit_config
+)
+from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.sonic.utils.utils import (
+    update_states,
+    get_diff,
+    get_replaced_config,
+    get_normalize_interface_name,
+)
+
 
 trust_stores_path="/data/openconfig-pki:pki/trust-stores"
 security_profiles_path="/data/openconfig-pki:pki/security-profiles"
 trust_store_path="/data/openconfig-pki:pki/trust-stores/trust-store"
 security_profile_path="/data/openconfig-pki:pki/security-profiles/security-profile"
+
+PATCH = 'patch'
+DELETE = 'delete'
+TEST_KEYS = [
+    {'host': {'name': ''}},
+]
+
 
 class Pki(ConfigBase):
     """
@@ -101,20 +119,24 @@ class Pki(ConfigBase):
         :returns: the commands necessary to migrate the current configuration
                   to the desired configuration
         """
+        commands = []
+        requests = []
         state = self._module.params['state']
+        if not want:
+            want = {}
+
+        diff = get_diff(want, have, TEST_KEYS)
+
         if state == 'overridden':
-            kwargs = {}
-            commands = self._state_overridden(**kwargs)
+            commands, requests = self._state_overridden(want, have, diff)
         elif state == 'deleted':
-            kwargs = {}
-            commands = self._state_deleted(want, have)
+            commands, requests = self._state_deleted(want, have, diff)
         elif state == 'merged':
-            
-            commands = self._state_merged(want)
+            commands, requests = self._state_merged(want, have, diff)
         elif state == 'replaced':
-            kwargs = {}
-            commands = self._state_replaced(**kwargs)
-        return commands
+            commands, requests = self._state_replaced(want, have, diff)
+        return commands, requests
+
     def _state_replaced(self, want, have, diff):
         """ Select the appropriate function based on the state provided
 
