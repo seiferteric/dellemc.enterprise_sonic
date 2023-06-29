@@ -122,7 +122,7 @@ class Pki(ConfigBase):
         if not want:
             want = {}
 
-        diff = get_diff(want, have, TEST_KEYS)
+        diff = get_diff(want, have)
 
         if state == 'overridden':
             commands, requests = self._state_overridden(want, have, diff)
