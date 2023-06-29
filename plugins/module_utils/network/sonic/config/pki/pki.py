@@ -115,15 +115,36 @@ class Pki(ConfigBase):
             kwargs = {}
             commands = self._state_replaced(**kwargs)
         return commands
-    def _state_replaced(self, **kwargs):
-        """ The command generator when state is replaced
+    def _state_replaced(self, want, have, diff):
+        """ Select the appropriate function based on the state provided
 
+        :param want: the desired configuration as a dictionary
+        :param have: the current configuration as a dictionary
         :rtype: A list
         :returns: the commands necessary to migrate the current configuration
                   to the desired configuration
         """
         commands = []
-        return commands
+        requests = []
+        replaced_config = get_replaced_config(want, have, TEST_KEYS)
+
+        add_commands = []
+        if replaced_config:
+            del_requests = self.get_delete_tacacs_server_requests(replaced_config, have)
+            requests.extend(del_requests)
+            commands.extend(update_states(replaced_config, "deleted"))
+            add_commands = want
+        else:
+            add_commands = diff
+
+        if add_commands:
+            add_requests = self.get_modify_tacacs_server_requests(add_commands, have)
+            if len(add_requests) > 0:
+                requests.extend(add_requests)
+                commands.extend(update_states(add_commands, "replaced"))
+
+        return commands, requests
+
 
     def _state_overridden(self, **kwargs):
         """ The command generator when state is overridden
