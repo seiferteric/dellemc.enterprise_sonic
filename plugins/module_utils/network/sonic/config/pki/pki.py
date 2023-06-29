@@ -222,7 +222,7 @@ class Pki(ConfigBase):
         if mat_sp and sps:
             for sp in sps:
                 if next((m_sp for m_sp in mat_sp if m_sp == sp), None):
-                    requests.append({'path': url + sp, 'method': DELETE})
+                    requests.append({'path': url + sp, 'method': 'delete'})
 
         return requests
     def get_delete_trust_stores(self, command, have):
@@ -238,7 +238,7 @@ class Pki(ConfigBase):
         if mat_sp and sps:
             for sp in sps:
                 if next((m_sp for m_sp in mat_sp if m_sp == sp), None):
-                    requests.append({'path': url + sp, 'method': DELETE})
+                    requests.append({'path': url + sp, 'method': 'delete'})
 
         return requests
     def get_modify_security_profiles_request(self, command):
@@ -254,7 +254,6 @@ class Pki(ConfigBase):
         return request
     def get_modify_pki_requests(self, command, have):
         requests = []
-        import epdb; epdb.serve()
         if not command:
             return requests
 
