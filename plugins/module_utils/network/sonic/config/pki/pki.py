@@ -82,9 +82,12 @@ class Pki(ConfigBase):
 
         existing_pki_facts = self.get_pki_facts()
         commands.extend(self.set_config(existing_pki_facts))
-        if commands:
+        if commands and len(requests) > 0:
             if not self._module.check_mode:
-                self._connection.edit_config(commands)
+                try:
+                    edit_config(self._module, to_request(self._module, requests))
+                except ConnectionError as exc:
+                    self._module.fail_json(msg=str(exc), code=exc.code)
             result['changed'] = True
         result['commands'] = commands
 
