@@ -245,7 +245,6 @@ class Pki(ConfigBase):
         request = None
 
         sps = command.get("security-profiles")
-        import epdb; epdb.serve()
         if sps:
             url = security_profile_path
             payload = [{"config": sp, "profile-name": sp.get("profile-name")} for sp in sps]
@@ -255,6 +254,7 @@ class Pki(ConfigBase):
         return request
     def get_modify_pki_requests(self, command, have):
         requests = []
+        import epdb; epdb.serve()
         if not command:
             return requests
 
