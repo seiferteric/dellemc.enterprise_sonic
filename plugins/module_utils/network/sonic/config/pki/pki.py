@@ -258,7 +258,7 @@ class Pki(ConfigBase):
         if not command:
             return requests
 
-        sp_requests = self.get_modify_security_profiles_request(command)
+        sp_requests = self.get_modify_security_profiles_requests(command)
         if sp_requests:
             requests.extend(sp_request)
 
