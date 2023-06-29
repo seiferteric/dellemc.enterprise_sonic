@@ -212,8 +212,6 @@ class Pki(ConfigBase):
             
 
         return commands
-    def get_modify_security_profiles(self, command, have):
-        return []
     def get_delete_security_profiles(self, command, have):
         requests = []
         url = security_profile_path + "="
@@ -232,6 +230,8 @@ class Pki(ConfigBase):
 
         return requests
 
+    def get_modify_pki_requests(self, command, have):
+        return []
 
     def get_delete_pki_requests(self, command, have):
         requests = []
