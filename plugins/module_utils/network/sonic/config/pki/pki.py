@@ -241,8 +241,8 @@ class Pki(ConfigBase):
                     requests.append({'path': url + sp, 'method': 'delete'})
 
         return requests
-    def get_modify_security_profiles_request(self, command):
-        request = None
+    def get_modify_security_profiles_requests(self, command):
+        requests = []
 
         sps = command.get("security-profiles")
         if sps:
@@ -250,16 +250,17 @@ class Pki(ConfigBase):
             payload = [{"config": sp, "profile-name": sp.get("profile-name")} for sp in sps]
             if payload:
                 request = {'path': url, 'method': 'patch', 'data': payload}
+                requests.append(request)
 
-        return request
+        return requests
     def get_modify_pki_requests(self, command, have):
         requests = []
         if not command:
             return requests
 
-        request = self.get_modify_security_profiles_request(command)
-        if request:
-            requests.append(request)
+        sp_requests = self.get_modify_security_profiles_request(command)
+        if sp_requests:
+            requests.extend(sp_request)
 
         #request = self.get_modify_trust_stores_request(command)
         #if request:
