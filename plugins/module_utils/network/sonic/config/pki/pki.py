@@ -148,23 +148,22 @@ class Pki(ConfigBase):
         """
         commands = []
         requests = []
-        #replaced_config = get_replaced_config(want, have, TEST_KEYS)
+        replaced_config = get_replaced_config(want, have, TEST_KEYS)
 
-        #add_commands = []
-        #if replaced_config:
-        #    del_requests = self.get_delete_pki_requests(replaced_config, have)
-        #    requests.extend(del_requests)
-        #    commands.extend(update_states(replaced_config, "deleted"))
-        #    add_commands = want
-        #else:
-        #    add_commands = diff
+        add_commands = []
+        if replaced_config:
+            del_requests = self.get_delete_pki_requests(replaced_config, have)
+            requests.extend(del_requests)
+            commands.extend(update_states(replaced_config, "deleted"))
+            add_commands = want
+        else:
+            add_commands = diff
 
-        #if add_commands:
-        #    add_requests = self.get_modify_pki_requests(add_commands, have)
-        #    if len(add_requests) > 0:
-        #        requests.extend(add_requests)
-        #        commands.extend(update_states(add_commands, "replaced"))
-        commands.append({"path": security_profiles_path, "method": "delete", "data": ""})
+        if add_commands:
+            add_requests = self.get_modify_pki_requests(add_commands, have)
+            if len(add_requests) > 0:
+                requests.extend(add_requests)
+                commands.extend(update_states(add_commands, "replaced"))
 
         return commands, requests
 
@@ -218,15 +217,15 @@ class Pki(ConfigBase):
         url = security_profile_path + "="
         mat_sp = [sp.get("profile-name") for sp in have.get("security-profiles", []) if sp.get("profile-name")]
 
-        #if command.get("security-profiles") and command.get("security-profiles") != None:
-        #    sps = [sp.get("profile-name") for sp in command.get("security-profiles", []) if sp.get("profile-name")]
-        #else:
-        #    sps = mat_sp
+        if command.get("security-profiles") and command.get("security-profiles") != None:
+            sps = [sp.get("profile-name") for sp in command.get("security-profiles", []) if sp.get("profile-name")]
+        else:
+            sps = mat_sp
 
-        #if mat_sp and sps:
-        #    for sp in sps:
-        #        if next((m_sp for m_sp in mat_sp if m_sp['profile-name'] == sp['profile-name']), None):
-        #            requests.append({'path': url + sp['profile-name'], 'method': DELETE})
+        if mat_sp and sps:
+            for sp in sps:
+                if next((m_sp for m_sp in mat_sp if m_sp['profile-name'] == sp['profile-name']), None):
+                    requests.append({'path': url + sp['profile-name'], 'method': DELETE})
 
         return requests
 
