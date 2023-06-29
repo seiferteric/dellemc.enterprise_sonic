@@ -84,6 +84,7 @@ class Pki(ConfigBase):
         commands.extend(self.set_config(existing_pki_facts))
         if commands:
             if not self._module.check_mode:
+                import epdb; epdb.serve()
                 self._connection.edit_config(commands)
             result['changed'] = True
         result['commands'] = commands
@@ -134,7 +135,6 @@ class Pki(ConfigBase):
         elif state == 'merged':
             commands, requests = self._state_merged(want, have, diff)
         elif state == 'replaced':
-            import epdb; epdb.serve()
             commands, requests = self._state_replaced(want, have, diff)
         return commands, requests
 
