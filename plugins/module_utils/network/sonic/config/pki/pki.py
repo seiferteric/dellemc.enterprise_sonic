@@ -249,7 +249,7 @@ class Pki(ConfigBase):
             url = security_profile_path
             payload = [{"config": sp, "profile-name": sp.get("profile-name")} for sp in sps]
             if payload:
-                request = {'path': url, 'method': PATCH, 'data': payload}
+                request = {'path': url, 'method': 'patch', 'data': payload}
 
         return request
     def get_modify_pki_requests(self, command, have):
