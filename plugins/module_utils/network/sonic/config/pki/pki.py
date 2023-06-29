@@ -260,7 +260,7 @@ class Pki(ConfigBase):
 
         sp_requests = self.get_modify_security_profiles_requests(command)
         if sp_requests:
-            requests.extend(sp_request)
+            requests.extend(sp_requests)
 
         #request = self.get_modify_trust_stores_request(command)
         #if request:
