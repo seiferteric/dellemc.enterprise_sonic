@@ -215,7 +215,6 @@ class Pki(ConfigBase):
     def get_delete_security_profiles(self, command, have):
         requests = []
         url = security_profile_path + "="
-        import epdb; epdb.serve()
         mat_sp = [sp.get("profile-name") for sp in have.get("security-profiles", []) if sp.get("profile-name")]
 
         #if command.get("security-profiles") and command.get("security-profiles") != None:
