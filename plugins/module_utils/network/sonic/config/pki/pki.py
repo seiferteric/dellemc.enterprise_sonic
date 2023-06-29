@@ -159,11 +159,11 @@ class Pki(ConfigBase):
         else:
             add_commands = diff
 
-        if add_commands:
-            add_requests = self.get_modify_pki_requests(add_commands, have)
-            if len(add_requests) > 0:
-                requests.extend(add_requests)
-                commands.extend(update_states(add_commands, "replaced"))
+        #if add_commands:
+        #    add_requests = self.get_modify_pki_requests(add_commands, have)
+        #    if len(add_requests) > 0:
+        #        requests.extend(add_requests)
+        #        commands.extend(update_states(add_commands, "replaced"))
 
         return commands, requests
 
