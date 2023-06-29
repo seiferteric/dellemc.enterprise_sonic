@@ -84,7 +84,6 @@ class Pki(ConfigBase):
         commands.extend(self.set_config(existing_pki_facts))
         if commands:
             if not self._module.check_mode:
-                import epdb; epdb.serve()
                 self._connection.edit_config(commands)
             result['changed'] = True
         result['commands'] = commands
