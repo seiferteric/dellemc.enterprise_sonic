@@ -34,12 +34,6 @@ security_profiles_path="/data/openconfig-pki:pki/security-profiles"
 trust_store_path="/data/openconfig-pki:pki/trust-stores/trust-store"
 security_profile_path="/data/openconfig-pki:pki/security-profiles/security-profile"
 
-PATCH = 'patch'
-DELETE = 'delete'
-TEST_KEYS = [
-    {'host': {'name': ''}},
-]
-
 
 class Pki(ConfigBase):
     """
@@ -151,7 +145,7 @@ class Pki(ConfigBase):
         """
         commands = []
         requests = []
-        replaced_config = get_replaced_config(want, have, TEST_KEYS)
+        replaced_config = get_replaced_config(want, have)
 
         add_commands = []
         if replaced_config:
@@ -247,9 +241,32 @@ class Pki(ConfigBase):
                     requests.append({'path': url + sp, 'method': DELETE})
 
         return requests
+    def get_modify_security_profiles_request(self, command):
+        request = None
 
+        sps = command.get("security-profiles")
+
+        if sps:
+            url = security_profile_path
+            payload = [{"config": sp, "profile-name": sp.get("profile-name")} for sp in sps]
+            if payload:
+                request = {'path': url, 'method': PATCH, 'data': payload}
+
+        return request
     def get_modify_pki_requests(self, command, have):
-        return []
+        requests = []
+        if not command:
+            return requests
+
+        request = self.get_modify_security_profiles_request(command)
+        if request:
+            requests.append(request)
+
+        request = self.get_modify_trust_stores_request(command)
+        if request:
+            requests.append(request)
+
+        return requests
 
     def get_delete_pki_requests(self, command, have):
         requests = []
