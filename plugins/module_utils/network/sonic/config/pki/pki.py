@@ -115,7 +115,7 @@ class Pki(ConfigBase):
             kwargs = {}
             commands = self._state_replaced(**kwargs)
         return commands
-    def _state_replaced(**kwargs):
+    def _state_replaced(self, **kwargs):
         """ The command generator when state is replaced
 
         :rtype: A list
@@ -125,7 +125,7 @@ class Pki(ConfigBase):
         commands = []
         return commands
 
-    def _state_overridden(**kwargs):
+    def _state_overridden(self, **kwargs):
         """ The command generator when state is overridden
 
         :rtype: A list
