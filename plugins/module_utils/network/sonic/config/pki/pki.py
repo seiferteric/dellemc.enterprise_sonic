@@ -216,16 +216,12 @@ class Pki(ConfigBase):
         requests = []
         url = security_profile_path + "="
 
-        mat_sp = []
-        if have.get('security-profiles', None) and have['security-profiles'].get('profile-name', None):
-            mat_sp = have['security-profiles']['profile-name']
+        mat_sp = [sp.get("profile-name") for sp in have.get("security-profiles", []) if sp.get("profile-name")]
 
-        sps = []
-        if command.get('security-profiles', None):
-            if command['security-profiles'].get('profile-name', None):
-                sps = command['security-profiles']['profile-name']
-            else:
-                sps = mat_sp
+        if command.get("security-profiles") and command.get("security-profiles") != None:
+            sps = [sp.get("profile-name") for sp in command.get("security-profiles", []) if sp.get("profile-name")]
+        else:
+            sps = mat_sp
 
         if mat_sp and sps:
             for sp in sps:
