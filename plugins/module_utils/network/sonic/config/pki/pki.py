@@ -224,7 +224,7 @@ class Pki(ConfigBase):
 
         if mat_sp and sps:
             for sp in sps:
-                if next((m_sp for m_sp in mat_sp if m_sp['profile-name'] == sp['profile-name']), None):
+                if next((m_sp for m_sp in mat_sp if m_sp == sp), None):
                     requests.append({'path': url + sp['profile-name'], 'method': DELETE})
 
         return requests
