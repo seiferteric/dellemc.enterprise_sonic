@@ -29,10 +29,10 @@ from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.s
 )
 
 
-trust_stores_path="/data/openconfig-pki:pki/trust-stores"
-security_profiles_path="/data/openconfig-pki:pki/security-profiles"
-trust_store_path="/data/openconfig-pki:pki/trust-stores/trust-store"
-security_profile_path="/data/openconfig-pki:pki/security-profiles/security-profile"
+trust_stores_path="data/openconfig-pki:pki/trust-stores"
+security_profiles_path="data/openconfig-pki:pki/security-profiles"
+trust_store_path="data/openconfig-pki:pki/trust-stores/trust-store"
+security_profile_path="data/openconfig-pki:pki/security-profiles/security-profile"
 
 
 class Pki(ConfigBase):
@@ -79,6 +79,7 @@ class Pki(ConfigBase):
         if commands and len(requests) > 0:
             if not self._module.check_mode:
                 try:
+                    # import epdb; epdb.serve()
                     edit_config(self._module, to_request(self._module, requests))
                 except ConnectionError as exc:
                     self._module.fail_json(msg=str(exc), code=exc.code)
@@ -92,6 +93,7 @@ class Pki(ConfigBase):
             result['after'] = changed_pki_facts
 
         result['warnings'] = warnings
+        
         return result
 
     def set_config(self, existing_pki_facts):
@@ -186,7 +188,7 @@ class Pki(ConfigBase):
         requests = []
         if want and want.get('trust-stores'):
             for ts in want.get('trust-stores'):
-                requests.append({"path": trust_store_path, "method": "patch", "data": {"sonic-pki:TRUST_STORES_LIST": [ts]}})
+                requests.append({"path": trust_store_path, "method": "patch", "data": {"openconfig-pki:trust-store": [{"name": ts.get("name"), "config": ts}]}})
         if want and want.get('security-profiles'):
             for sp in want.get('security-profiles'):
                 requests.append({"path": security_profile_path, "method": "patch", "data": {"openconfig-pki:security-profile": [{"profile-name": sp.get("profile-name"), "config": sp}]}})
@@ -200,22 +202,21 @@ class Pki(ConfigBase):
         :returns: the commands necessary to remove the current configuration
                   of the provided objects
         """
+        
         commands = []
         requests = []
         if not want:
             commands = have
-            requests.append({"path": trust_stores_path, "method": "delete", "data": ""})
-            requests.append({"path": security_profiles_path, "method": "delete", "data": ""})
+            requests.append({"path": trust_stores_path, "method": "delete"})
+            requests.append({"path": security_profiles_path, "method": "delete"})
         else:
             commands = want
-            for sp in commands.get("security-profiles", []):
-                requests.append({"path": security_profiles_path + '=' + sp.get('profile-name'), "method": "delete", "data": ""})
-            for ts in commands.get("trust-stores", []):
-                requests.append({"path": trust_stores_path + '=' + ts.get('profile-name'), "method": "delete", "data": ""})
-                
+            for sp in commands.get("security-profiles") or []:
+                requests.append({"path": security_profile_path + '=' + sp.get('profile-name'), "method": "delete"})
+            for ts in commands.get("trust-stores") or []:
+                requests.append({"path": trust_store_path + '=' + ts.get('profile-name'), "method": "delete"})
 
-            
-        if commands and len(requests) > 0:
+        if commands and requests:
             commands = update_states([commands], "deleted")
 
         return commands, requests
