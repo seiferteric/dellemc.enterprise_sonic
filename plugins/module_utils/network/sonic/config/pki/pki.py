@@ -61,7 +61,7 @@ class Pki(ConfigBase):
         facts, _warnings = Facts(self._module).get_facts(self.gather_subset, self.gather_network_resources)
         pki_facts = facts['ansible_network_resources'].get('pki')
         if not pki_facts:
-            return []
+            return {}
         return pki_facts
 
     def execute_module(self):
@@ -79,7 +79,6 @@ class Pki(ConfigBase):
         if commands and len(requests) > 0:
             if not self._module.check_mode:
                 try:
-                    # import epdb; epdb.serve()
                     edit_config(self._module, to_request(self._module, requests))
                 except ConnectionError as exc:
                     self._module.fail_json(msg=str(exc), code=exc.code)
@@ -174,7 +173,13 @@ class Pki(ConfigBase):
         :returns: the commands necessary to migrate the current configuration
                   to the desired configuration
         """
-        commands = []
+        commands = diff or {}
+        requests = []
+
+        if commands and requests:
+            commands = update_states(commands, "overridden")
+        else:
+            commands = []
         return commands
 
     def _state_merged(self, want, have, diff):
@@ -207,17 +212,18 @@ class Pki(ConfigBase):
         :returns: the commands necessary to remove the current configuration
                   of the provided objects
         """
-        
         commands = []
         requests = []
+        current_ts = [ts.get('name') for ts in have.get('trust-stores') or [] if ts.get('name')]
+        current_sp = [sp.get('profile-name') for sp in have.get('security-profiles') or [] if sp.get('profile-name')]
         if not want:
             commands = have
-            requests.append({"path": trust_stores_path, "method": "delete"})
-            requests.append({"path": security_profiles_path, "method": "delete"})
+            for sp in current_sp:
+                requests.append({"path": security_profile_path + '=' + sp, "method": "delete"})
+            for ts in current_ts:
+                requests.append({"path": trust_store_path + '=' + ts, "method": "delete"})
         else:
             commands = want
-            current_ts = [ts.get('name') for ts in have.get('trust-stores') or [] if ts.get('name')]
-            current_sp = [sp.get('profile-name') for sp in have.get('security-profiles') or [] if sp.get('profile-name')]
             for sp in commands.get("security-profiles") or []:
                 if sp.get('profile-name') in current_sp:
                     requests.append({"path": security_profile_path + '=' + sp.get('profile-name'), "method": "delete"})
