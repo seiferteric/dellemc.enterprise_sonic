@@ -211,10 +211,14 @@ class Pki(ConfigBase):
             requests.append({"path": security_profiles_path, "method": "delete"})
         else:
             commands = want
+            current_ts = [ts.get('name') for ts in have.get('trust-stores') or [] if ts.get('name')]
+            current_sp = [sp.get('profile-name') for sp in have.get('security-profiles') or [] if sp.get('profile-name')]
             for sp in commands.get("security-profiles") or []:
-                requests.append({"path": security_profile_path + '=' + sp.get('profile-name'), "method": "delete"})
+                if sp.get('profile-name') in current_sp:
+                    requests.append({"path": security_profile_path + '=' + sp.get('profile-name'), "method": "delete"})
             for ts in commands.get("trust-stores") or []:
-                requests.append({"path": trust_store_path + '=' + ts.get('profile-name'), "method": "delete"})
+                if ts.get('name') in current_ts:
+                    requests.append({"path": trust_store_path + '=' + ts.get('profile-name'), "method": "delete"})
 
         if commands and requests:
             commands = update_states([commands], "deleted")
