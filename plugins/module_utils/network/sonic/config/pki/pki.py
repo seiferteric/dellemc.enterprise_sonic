@@ -184,15 +184,20 @@ class Pki(ConfigBase):
         :returns: the commands necessary to merge the provided into
                   the current configuration
         """
-        commands = diff
+        commands = diff or {}
         requests = []
-        if want and want.get('trust-stores'):
-            for ts in want.get('trust-stores'):
-                requests.append({"path": trust_store_path, "method": "patch", "data": {"openconfig-pki:trust-store": [{"name": ts.get("name"), "config": ts}]}})
-        if want and want.get('security-profiles'):
-            for sp in want.get('security-profiles'):
-                requests.append({"path": security_profile_path, "method": "patch", "data": {"openconfig-pki:security-profile": [{"profile-name": sp.get("profile-name"), "config": sp}]}})
         
+        for ts in commands.get('trust-stores') or []:
+            requests.append({"path": trust_store_path, "method": "patch", "data": {"openconfig-pki:trust-store": [{"name": ts.get("name"), "config": ts}]}})
+        
+        for sp in commands.get('security-profiles') or []:
+            requests.append({"path": security_profile_path, "method": "patch", "data": {"openconfig-pki:security-profile": [{"profile-name": sp.get("profile-name"), "config": sp}]}})
+        
+        if commands and requests:
+            commands = update_states(commands, "merged")
+        else:
+            commands = []
+
         return commands, requests
 
     def _state_deleted(self, want, have, diff):
@@ -222,6 +227,8 @@ class Pki(ConfigBase):
 
         if commands and requests:
             commands = update_states([commands], "deleted")
+        else:
+            commands = []
 
         return commands, requests
     def get_delete_security_profiles(self, command, have):
