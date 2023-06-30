@@ -175,40 +175,50 @@ class Pki(ConfigBase):
         commands = []
         return commands
 
-    def _state_merged(self, want):
+    def _state_merged(self, want, have, diff):
         """ The command generator when state is merged
 
         :rtype: A list
         :returns: the commands necessary to merge the provided into
                   the current configuration
         """
-        commands = []
+        commands = diff
+        requests = []
         if want and want.get('trust-stores'):
             for ts in want.get('trust-stores'):
-                commands.append({"path": trust_store_path, "method": "patch", "data": {"sonic-pki:TRUST_STORES_LIST": [ts]}})
+                requests.append({"path": trust_store_path, "method": "patch", "data": {"sonic-pki:TRUST_STORES_LIST": [ts]}})
         if want and want.get('security-profiles'):
             for sp in want.get('security-profiles'):
-                commands.append({"path": security_profile_path, "method": "patch", "data": {"openconfig-pki:security-profile": [{"profile-name": sp.get("profile-name"), "config": sp}]}})
+                requests.append({"path": security_profile_path, "method": "patch", "data": {"openconfig-pki:security-profile": [{"profile-name": sp.get("profile-name"), "config": sp}]}})
         
-        return commands
+        return commands, requests
 
-    def _state_deleted(self, want, have):
+    def _state_deleted(self, want, have, diff):
         """ The command generator when state is deleted
 
         :rtype: A list
         :returns: the commands necessary to remove the current configuration
                   of the provided objects
         """
-        want = False
         commands = []
+        requests = []
         if not want:
-            commands.append({"path": trust_stores_path, "method": "delete", "data": ""})
-            commands.append({"path": security_profiles_path, "method": "delete", "data": ""})
+            commands = have
+            requests.append({"path": trust_stores_path, "method": "delete", "data": ""})
+            requests.append({"path": security_profiles_path, "method": "delete", "data": ""})
         else:
-            pass
-            
+            commands = want
+            for sp in commands.get("security-profiles", []):
+                requests.append({"path": security_profiles_path + '=' + sp.get('profile-name'), "method": "delete", "data": ""})
+            for ts in commands.get("trust-stores", []):
+                requests.append({"path": trust_stores_path + '=' + ts.get('profile-name'), "method": "delete", "data": ""})
+                
 
-        return commands
+            
+        if commands and len(requests) > 0:
+            commands = update_states([commands], "deleted")
+
+        return commands, requests
     def get_delete_security_profiles(self, command, have):
         requests = []
         url = security_profile_path + "="
