@@ -144,43 +144,82 @@ class Pki(ConfigBase):
         :returns: the commands necessary to migrate the current configuration
                   to the desired configuration
         """
-        commands = []
+        commands = diff or {}
         requests = []
-        replaced_config = get_replaced_config(want, have)
+        # replaced_config = get_replaced_config(want, have)
 
-        add_commands = []
-        if replaced_config:
-            del_requests = self.get_delete_pki_requests(replaced_config, have)
-            requests.extend(del_requests)
-            commands.extend(update_states(replaced_config, "deleted"))
-            add_commands = want
+        # add_commands = []
+        # if replaced_config:
+        #     del_requests = self.get_delete_pki_requests(replaced_config, have)
+        #     requests.extend(del_requests)
+        #     commands.extend(update_states(replaced_config, "deleted"))
+        #     add_commands = want
+        # else:
+        #     add_commands = diff
+
+        # if add_commands:
+        #     add_requests = self.get_modify_pki_requests(add_commands, have)
+        #     if len(add_requests) > 0:
+        #         requests.extend(add_requests)
+        #         commands.extend(update_states(add_commands, "replaced"))
+
+        sps = diff.get("security-profiles") or []
+        tss = diff.get("trust-stores") or []
+        for sp in sps:
+            requests.append({'path': security_profile_path + '=' + sp.get('profile-name'), 'method': 'put', 'data': {"openconfig-pki:security-profile": [{"profile-name": sp.get("profile-name"), "config": sp}]}})
+        for ts in tss:
+            requests.append({'path': trust_store_path + '=' + ts.get('name'), 'method': 'put', 'data': {"openconfig-pki:trust-store": [{"name": ts.get("name"), "config": ts}]}})
+        if commands and requests:
+            commands = update_states(commands, "replaced")
         else:
-            add_commands = diff
-
-        if add_commands:
-            add_requests = self.get_modify_pki_requests(add_commands, have)
-            if len(add_requests) > 0:
-                requests.extend(add_requests)
-                commands.extend(update_states(add_commands, "replaced"))
+            commands = []
 
         return commands, requests
 
 
-    def _state_overridden(self, **kwargs):
+    def _state_overridden(self, want, have, diff):
         """ The command generator when state is overridden
 
         :rtype: A list
         :returns: the commands necessary to migrate the current configuration
                   to the desired configuration
         """
-        commands = diff or {}
+        
+        commands = []
         requests = []
 
+        want_tss = [ts.get('name') for ts in want.get("trust-stores") or []]
+        want_sps = [sp.get('profile-name') for sp in want.get("security-profiles") or []]
+        have_tss = [ts.get('name') for ts in have.get("trust-stores") or []]
+        have_sps = [sp.get('profile-name') for sp in have.get("security-profiles") or []]
+
+        have_dict = {
+            "security-profiles": {sp.get('profile-name'): sp for sp in have.get("security-profiles") or []},
+            "trust-stores": {ts.get('name'): ts for ts in have.get("trust-stores") or []}
+        }
+
+        for sp in have_sps:
+            if sp not in want_sps:
+                requests.append({'path': security_profile_path + '=' + sp, 'method': 'delete'})
+                
+        for ts in have_tss:
+            if ts not in want_tss:
+                requests.append({'path': trust_store_path + '=' + ts, 'method': 'delete'})
+        commands.extend(update_states(have, "deleted"))
+        
+        for sp in want.get('security-profiles') or []:
+            if sp != have_dict['security-profiles'].get(sp.get('profile-name')):
+                requests.append({'path': security_profile_path + '=' + sp.get('profile-name'), 'method': 'put', 'data': {"openconfig-pki:security-profile": [{"profile-name": sp.get("profile-name"), "config": sp}]}})
+        for ts in want.get('trust-stores') or []:
+            if ts != have_dict['trust-stores'].get(ts.get('name')):
+                requests.append({'path': trust_store_path + '=' + ts.get('name'), 'method': 'put', 'data': {"openconfig-pki:trust-store": [{"name": ts.get("name"), "config": ts}]}})
+
+        commands.extend(update_states(want, "overridden"))
         if commands and requests:
             commands = update_states(commands, "overridden")
         else:
             commands = []
-        return commands
+        return commands, requests
 
     def _state_merged(self, want, have, diff):
         """ The command generator when state is merged
@@ -237,73 +276,73 @@ class Pki(ConfigBase):
             commands = []
 
         return commands, requests
-    def get_delete_security_profiles(self, command, have):
-        requests = []
-        url = security_profile_path + "="
-        mat_sp = [sp.get("profile-name") for sp in have.get("security-profiles", []) if sp.get("profile-name")]
+    # def get_delete_security_profiles(self, command, have):
+    #     requests = []
+    #     url = security_profile_path + "="
+    #     mat_sp = [sp.get("profile-name") for sp in have.get("security-profiles", []) if sp.get("profile-name")]
 
-        if command.get("security-profiles") and command.get("security-profiles") != None:
-            sps = [sp.get("profile-name") for sp in command.get("security-profiles", []) if sp.get("profile-name")]
-        else:
-            sps = mat_sp
+    #     if command.get("security-profiles") and command.get("security-profiles") != None:
+    #         sps = [sp.get("profile-name") for sp in command.get("security-profiles", []) if sp.get("profile-name")]
+    #     else:
+    #         sps = mat_sp
 
-        if mat_sp and sps:
-            for sp in sps:
-                if next((m_sp for m_sp in mat_sp if m_sp == sp), None):
-                    requests.append({'path': url + sp, 'method': 'delete'})
+    #     if mat_sp and sps:
+    #         for sp in sps:
+    #             if next((m_sp for m_sp in mat_sp if m_sp == sp), None):
+    #                 requests.append({'path': url + sp, 'method': 'delete'})
 
-        return requests
-    def get_delete_trust_stores(self, command, have):
-        requests = []
-        url = trust_store_path + "="
-        mat_sp = [sp.get("name") for sp in have.get("trust-stores", []) if sp.get("name")]
+    #     return requests
+    # def get_delete_trust_stores(self, command, have):
+    #     requests = []
+    #     url = trust_store_path + "="
+    #     mat_sp = [sp.get("name") for sp in have.get("trust-stores", []) if sp.get("name")]
 
-        if command.get("trust-stores") and command.get("trust-stores") != None:
-            sps = [sp.get("name") for sp in command.get("trust-stores", []) if sp.get("name")]
-        else:
-            sps = mat_sp
+    #     if command.get("trust-stores") and command.get("trust-stores") != None:
+    #         sps = [sp.get("name") for sp in command.get("trust-stores", []) if sp.get("name")]
+    #     else:
+    #         sps = mat_sp
 
-        if mat_sp and sps:
-            for sp in sps:
-                if next((m_sp for m_sp in mat_sp if m_sp == sp), None):
-                    requests.append({'path': url + sp, 'method': 'delete'})
+    #     if mat_sp and sps:
+    #         for sp in sps:
+    #             if next((m_sp for m_sp in mat_sp if m_sp == sp), None):
+    #                 requests.append({'path': url + sp, 'method': 'delete'})
 
-        return requests
-    def get_modify_security_profiles_requests(self, command):
-        requests = []
+    #     return requests
+    # def get_modify_security_profiles_requests(self, command):
+    #     requests = []
 
-        sps = command.get("security-profiles")
-        if sps:
-            url = security_profile_path
-            payload = [{"config": sp, "profile-name": sp.get("profile-name")} for sp in sps]
-            if payload:
-                request = {'path': url, 'method': 'patch', 'data': payload}
-                requests.append(request)
+    #     sps = command.get("security-profiles")
+    #     if sps:
+    #         url = security_profile_path
+    #         payload = [{"config": sp, "profile-name": sp.get("profile-name")} for sp in sps]
+    #         if payload:
+    #             request = {'path': url, 'method': 'patch', 'data': payload}
+    #             requests.append(request)
 
-        return requests
-    def get_modify_pki_requests(self, command, have):
-        requests = []
-        if not command:
-            return requests
+    #     return requests
+    # def get_modify_pki_requests(self, command, have):
+    #     requests = []
+    #     if not command:
+    #         return requests
 
-        sp_requests = self.get_modify_security_profiles_requests(command)
-        if sp_requests:
-            requests.extend(sp_requests)
+    #     sp_requests = self.get_modify_security_profiles_requests(command)
+    #     if sp_requests:
+    #         requests.extend(sp_requests)
 
-        #request = self.get_modify_trust_stores_request(command)
-        #if request:
-        #    requests.append(request)
+    #     #request = self.get_modify_trust_stores_request(command)
+    #     #if request:
+    #     #    requests.append(request)
 
-        return requests
+    #     return requests
 
-    def get_delete_pki_requests(self, command, have):
-        requests = []
-        if not command:
-            return requests
+    # def get_delete_pki_requests(self, command, have):
+    #     requests = []
+    #     if not command:
+    #         return requests
 
-        requests.extend(self.get_delete_security_profiles(command, have))
-        requests.extend(self.get_delete_trust_stores(command, have))
+    #     requests.extend(self.get_delete_security_profiles(command, have))
+    #     requests.extend(self.get_delete_trust_stores(command, have))
 
-        return requests
+    #     return requests
 
 
