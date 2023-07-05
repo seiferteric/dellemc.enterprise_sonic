@@ -215,10 +215,10 @@ class Pki(ConfigBase):
                 requests.append({'path': trust_store_path + '=' + ts.get('name'), 'method': 'put', 'data': {"openconfig-pki:trust-store": [{"name": ts.get("name"), "config": ts}]}})
 
         commands.extend(update_states(want, "overridden"))
-        if commands and requests:
-            commands = update_states(commands, "overridden")
-        else:
-            commands = []
+        # if commands and requests:
+        #     commands = update_states(commands, "overridden")
+        # else:
+        #     commands = []
         return commands, requests
 
     def _state_merged(self, want, have, diff):
