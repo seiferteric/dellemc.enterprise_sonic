@@ -34,6 +34,13 @@ security_profiles_path="data/openconfig-pki:pki/security-profiles"
 trust_store_path="data/openconfig-pki:pki/trust-stores/trust-store"
 security_profile_path="data/openconfig-pki:pki/security-profiles/security-profile"
 
+PATCH = 'patch'
+DELETE = 'delete'
+PUT = 'put'
+TEST_KEYS = [
+    {'security-profiles': {'profile-name': ''}},
+    {'trust-stores': {'name': ''}}
+]
 
 class Pki(ConfigBase):
     """
@@ -123,7 +130,7 @@ class Pki(ConfigBase):
         if not want:
             want = {}
 
-        diff = get_diff(want, have)
+        diff = get_diff(want, have, list(TEST_KEYS))
 
         if state == 'overridden':
             commands, requests = self._state_overridden(want, have, diff)
@@ -150,16 +157,15 @@ class Pki(ConfigBase):
         sps = diff.get("security-profiles") or []
         tss = diff.get("trust-stores") or []
         for sp in sps:
-            requests.append({'path': security_profile_path + '=' + sp.get('profile-name'), 'method': 'put', 'data': {"openconfig-pki:security-profile": [{"profile-name": sp.get("profile-name"), "config": sp}]}})
+            requests.append({'path': security_profile_path + '=' + sp.get('profile-name'), 'method': PUT, 'data': mk_sp_config(sp)})
         for ts in tss:
-            requests.append({'path': trust_store_path + '=' + ts.get('name'), 'method': 'put', 'data': {"openconfig-pki:trust-store": [{"name": ts.get("name"), "config": ts}]}})
+            requests.append({'path': trust_store_path + '=' + ts.get('name'), 'method': PUT, 'data': mk_ts_config(ts)})
         if commands and requests:
             commands = update_states(commands, "replaced")
         else:
             commands = []
 
         return commands, requests
-
 
     def _state_overridden(self, want, have, diff):
         """ The command generator when state is overridden
@@ -168,7 +174,7 @@ class Pki(ConfigBase):
         :returns: the commands necessary to migrate the current configuration
                   to the desired configuration
         """
-        
+
         commands = []
         requests = []
 
@@ -184,22 +190,22 @@ class Pki(ConfigBase):
 
         for sp in have_sps:
             if sp not in want_sps:
-                requests.append({'path': security_profile_path + '=' + sp, 'method': 'delete'})
+                requests.append({'path': security_profile_path + '=' + sp, 'method': DELETE})
+                commands.append(update_states(have_dict['security-profiles'][sp], "deleted"))
                 
         for ts in have_tss:
             if ts not in want_tss:
-                requests.append({'path': trust_store_path + '=' + ts, 'method': 'delete'})
-        #FIXME:
-        commands.extend(update_states(have, "deleted"))
+                requests.append({'path': trust_store_path + '=' + ts, 'method': DELETE})
+                commands.append(update_states(have_dict['trust-stores'][ts], "deleted"))
         
         for sp in want.get('security-profiles') or []:
             if sp != have_dict['security-profiles'].get(sp.get('profile-name')):
-                requests.append({'path': security_profile_path + '=' + sp.get('profile-name'), 'method': 'put', 'data': {"openconfig-pki:security-profile": [{"profile-name": sp.get("profile-name"), "config": sp}]}})
+                requests.append({'path': security_profile_path + '=' + sp.get('profile-name'), 'method': PUT, 'data': mk_sp_config(sp)})
+                commands.append(update_states(have_dict['security-profiles'][sp], "overridden"))
         for ts in want.get('trust-stores') or []:
             if ts != have_dict['trust-stores'].get(ts.get('name')):
-                requests.append({'path': trust_store_path + '=' + ts.get('name'), 'method': 'put', 'data': {"openconfig-pki:trust-store": [{"name": ts.get("name"), "config": ts}]}})
-
-        commands.extend(update_states(want, "overridden"))
+                requests.append({'path': trust_store_path + '=' + ts.get('name'), 'method': PUT, 'data': mk_ts_config(ts)})
+                commands.append(update_states(have_dict['trust-stores'][ts], "overridden"))
 
         return commands, requests
 
@@ -212,12 +218,12 @@ class Pki(ConfigBase):
         """
         commands = diff or {}
         requests = []
-        
+
         for ts in commands.get('trust-stores') or []:
-            requests.append({"path": trust_store_path, "method": "patch", "data": {"openconfig-pki:trust-store": [{"name": ts.get("name"), "config": ts}]}})
+            requests.append({"path": trust_store_path, "method": PATCH, "data": mk_ts_config(ts)})
         
         for sp in commands.get('security-profiles') or []:
-            requests.append({"path": security_profile_path, "method": "patch", "data": {"openconfig-pki:security-profile": [{"profile-name": sp.get("profile-name"), "config": sp}]}})
+            requests.append({"path": security_profile_path, "method": PATCH, "data": mk_sp_config(sp)})
         
         if commands and requests:
             commands = update_states(commands, "merged")
@@ -240,17 +246,17 @@ class Pki(ConfigBase):
         if not want:
             commands = have
             for sp in current_sp:
-                requests.append({"path": security_profile_path + '=' + sp, "method": "delete"})
+                requests.append({"path": security_profile_path + '=' + sp, "method": DELETE})
             for ts in current_ts:
-                requests.append({"path": trust_store_path + '=' + ts, "method": "delete"})
+                requests.append({"path": trust_store_path + '=' + ts, "method": DELETE})
         else:
             commands = want
             for sp in commands.get("security-profiles") or []:
                 if sp.get('profile-name') in current_sp:
-                    requests.append({"path": security_profile_path + '=' + sp.get('profile-name'), "method": "delete"})
+                    requests.append({"path": security_profile_path + '=' + sp.get('profile-name'), "method": DELETE})
             for ts in commands.get("trust-stores") or []:
                 if ts.get('name') in current_ts:
-                    requests.append({"path": trust_store_path + '=' + ts.get('profile-name'), "method": "delete"})
+                    requests.append({"path": trust_store_path + '=' + ts.get('profile-name'), "method": DELETE})
 
         if commands and requests:
             commands = update_states([commands], "deleted")
@@ -258,3 +264,13 @@ class Pki(ConfigBase):
             commands = []
 
         return commands, requests
+
+def mk_sp_config(indata):
+    outdata = {k: v for k,v in indata.items() if v != None}
+    output = {"openconfig-pki:security-profile": [{"profile-name": outdata.get("profile-name"), "config": outdata}]}
+    return output
+
+def mk_ts_config(indata):
+    outdata = {k: v for k,v in indata.items() if v != None}
+    output = {"openconfig-pki:trust-store": [{"name": outdata.get("name"), "config": outdata}]}
+    return output
