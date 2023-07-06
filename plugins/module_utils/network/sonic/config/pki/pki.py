@@ -16,31 +16,32 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.c
 from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils import (
     to_list,
 )
-from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.sonic.facts.facts import Facts
+from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.sonic.facts.facts import (
+    Facts,
+)
 from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.sonic.sonic import (
     to_request,
-    edit_config
+    edit_config,
 )
 from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.sonic.utils.utils import (
     update_states,
     get_diff,
-    get_replaced_config,
-    get_normalize_interface_name,
 )
 
 
-trust_stores_path="data/openconfig-pki:pki/trust-stores"
-security_profiles_path="data/openconfig-pki:pki/security-profiles"
-trust_store_path="data/openconfig-pki:pki/trust-stores/trust-store"
-security_profile_path="data/openconfig-pki:pki/security-profiles/security-profile"
+trust_stores_path = "data/openconfig-pki:pki/trust-stores"
+security_profiles_path = "data/openconfig-pki:pki/security-profiles"
+trust_store_path = "data/openconfig-pki:pki/trust-stores/trust-store"
+security_profile_path = "data/openconfig-pki:pki/security-profiles/security-profile"
 
-PATCH = 'patch'
-DELETE = 'delete'
-PUT = 'put'
+PATCH = "patch"
+DELETE = "delete"
+PUT = "put"
 TEST_KEYS = [
-    {'security-profiles': {'profile-name': ''}},
-    {'trust-stores': {'name': ''}}
+    {"security-profiles": {"profile-name": ""}},
+    {"trust-stores": {"name": ""}},
 ]
+
 
 class Pki(ConfigBase):
     """
@@ -48,36 +49,38 @@ class Pki(ConfigBase):
     """
 
     gather_subset = [
-        '!all',
-        '!min',
+        "!all",
+        "!min",
     ]
 
     gather_network_resources = [
-        'pki',
+        "pki",
     ]
 
     def __init__(self, module):
         super(Pki, self).__init__(module)
 
     def get_pki_facts(self):
-        """ Get the 'facts' (the current configuration)
+        """Get the 'facts' (the current configuration)
 
         :rtype: A dictionary
         :returns: The current configuration as a dictionary
         """
-        facts, _warnings = Facts(self._module).get_facts(self.gather_subset, self.gather_network_resources)
-        pki_facts = facts['ansible_network_resources'].get('pki')
+        facts, _warnings = Facts(self._module).get_facts(
+            self.gather_subset, self.gather_network_resources
+        )
+        pki_facts = facts["ansible_network_resources"].get("pki")
         if not pki_facts:
             return {}
         return pki_facts
 
     def execute_module(self):
-        """ Execute the module
+        """Execute the module
 
         :rtype: A dictionary
         :returns: The result from module execution
         """
-        result = {'changed': False}
+        result = {"changed": False}
         warnings = list()
         commands = list()
 
@@ -89,34 +92,34 @@ class Pki(ConfigBase):
                     edit_config(self._module, to_request(self._module, requests))
                 except ConnectionError as exc:
                     self._module.fail_json(msg=str(exc), code=exc.code)
-            result['changed'] = True
-        result['commands'] = commands
+            result["changed"] = True
+        result["commands"] = commands
 
         changed_pki_facts = self.get_pki_facts()
 
-        result['before'] = existing_pki_facts
-        if result['changed']:
-            result['after'] = changed_pki_facts
+        result["before"] = existing_pki_facts
+        if result["changed"]:
+            result["after"] = changed_pki_facts
 
-        result['warnings'] = warnings
-        
+        result["warnings"] = warnings
+
         return result
 
     def set_config(self, existing_pki_facts):
-        """ Collect the configuration from the args passed to the module,
+        """Collect the configuration from the args passed to the module,
             collect the current configuration (as a dict from facts)
 
         :rtype: A list
         :returns: the commands necessary to migrate the current configuration
                   to the desired configuration
         """
-        want = self._module.params['config']
+        want = self._module.params["config"]
         have = existing_pki_facts
         resp = self.set_state(want, have)
         return to_list(resp)
 
     def set_state(self, want, have):
-        """ Select the appropriate function based on the state provided
+        """Select the appropriate function based on the state provided
 
         :param want: the desired configuration as a dictionary
         :param have: the current configuration as a dictionary
@@ -126,24 +129,24 @@ class Pki(ConfigBase):
         """
         commands = []
         requests = []
-        state = self._module.params['state']
+        state = self._module.params["state"]
         if not want:
             want = {}
 
         diff = get_diff(want, have, list(TEST_KEYS))
 
-        if state == 'overridden':
+        if state == "overridden":
             commands, requests = self._state_overridden(want, have, diff)
-        elif state == 'deleted':
+        elif state == "deleted":
             commands, requests = self._state_deleted(want, have, diff)
-        elif state == 'merged':
+        elif state == "merged":
             commands, requests = self._state_merged(want, have, diff)
-        elif state == 'replaced':
+        elif state == "replaced":
             commands, requests = self._state_replaced(want, have, diff)
         return commands, requests
 
     def _state_replaced(self, want, have, diff):
-        """ Select the appropriate function based on the state provided
+        """Select the appropriate function based on the state provided
 
         :param want: the desired configuration as a dictionary
         :param have: the current configuration as a dictionary
@@ -157,9 +160,21 @@ class Pki(ConfigBase):
         sps = diff.get("security-profiles") or []
         tss = diff.get("trust-stores") or []
         for sp in sps:
-            requests.append({'path': security_profile_path + '=' + sp.get('profile-name'), 'method': PUT, 'data': mk_sp_config(sp)})
+            requests.append(
+                {
+                    "path": security_profile_path + "=" + sp.get("profile-name"),
+                    "method": PUT,
+                    "data": mk_sp_config(sp),
+                }
+            )
         for ts in tss:
-            requests.append({'path': trust_store_path + '=' + ts.get('name'), 'method': PUT, 'data': mk_ts_config(ts)})
+            requests.append(
+                {
+                    "path": trust_store_path + "=" + ts.get("name"),
+                    "method": PUT,
+                    "data": mk_ts_config(ts),
+                }
+            )
         if commands and requests:
             commands = update_states(commands, "replaced")
         else:
@@ -168,7 +183,7 @@ class Pki(ConfigBase):
         return commands, requests
 
     def _state_overridden(self, want, have, diff):
-        """ The command generator when state is overridden
+        """The command generator when state is overridden
 
         :rtype: A list
         :returns: the commands necessary to migrate the current configuration
@@ -177,40 +192,68 @@ class Pki(ConfigBase):
 
         commands = []
         requests = []
-
-        want_tss = [ts.get('name') for ts in want.get("trust-stores") or []]
-        want_sps = [sp.get('profile-name') for sp in want.get("security-profiles") or []]
-        have_tss = [ts.get('name') for ts in have.get("trust-stores") or []]
-        have_sps = [sp.get('profile-name') for sp in have.get("security-profiles") or []]
+        # import epdb; epdb.serve()
+        want_tss = [ts.get("name") for ts in want.get("trust-stores") or []]
+        want_sps = [
+            sp.get("profile-name") for sp in want.get("security-profiles") or []
+        ]
+        have_tss = [ts.get("name") for ts in have.get("trust-stores") or []]
+        have_sps = [
+            sp.get("profile-name") for sp in have.get("security-profiles") or []
+        ]
 
         have_dict = {
-            "security-profiles": {sp.get('profile-name'): sp for sp in have.get("security-profiles") or []},
-            "trust-stores": {ts.get('name'): ts for ts in have.get("trust-stores") or []}
+            "security-profiles": {
+                sp.get("profile-name"): sp for sp in have.get("security-profiles") or []
+            },
+            "trust-stores": {
+                ts.get("name"): ts for ts in have.get("trust-stores") or []
+            },
         }
 
         for sp in have_sps:
             if sp not in want_sps:
-                requests.append({'path': security_profile_path + '=' + sp, 'method': DELETE})
-                commands.append(update_states(have_dict['security-profiles'][sp], "deleted"))
-                
+                requests.append(
+                    {"path": security_profile_path + "=" + sp, "method": DELETE}
+                )
+                commands.append(
+                    update_states(have_dict["security-profiles"][sp], "deleted")
+                )
+
         for ts in have_tss:
             if ts not in want_tss:
-                requests.append({'path': trust_store_path + '=' + ts, 'method': DELETE})
-                commands.append(update_states(have_dict['trust-stores'][ts], "deleted"))
-        
-        for sp in want.get('security-profiles') or []:
-            if sp != have_dict['security-profiles'].get(sp.get('profile-name')):
-                requests.append({'path': security_profile_path + '=' + sp.get('profile-name'), 'method': PUT, 'data': mk_sp_config(sp)})
-                commands.append(update_states(have_dict['security-profiles'][sp], "overridden"))
-        for ts in want.get('trust-stores') or []:
-            if ts != have_dict['trust-stores'].get(ts.get('name')):
-                requests.append({'path': trust_store_path + '=' + ts.get('name'), 'method': PUT, 'data': mk_ts_config(ts)})
-                commands.append(update_states(have_dict['trust-stores'][ts], "overridden"))
+                requests.append({"path": trust_store_path + "=" + ts, "method": DELETE})
+                commands.append(update_states(have_dict["trust-stores"][ts], "deleted"))
+
+        for sp in want.get("security-profiles") or []:
+            if sp != have_dict["security-profiles"].get(sp.get("profile-name")):
+                requests.append(
+                    {
+                        "path": security_profile_path + "=" + sp.get("profile-name"),
+                        "method": PUT,
+                        "data": mk_sp_config(sp),
+                    }
+                )
+                commands.append(
+                    update_states(sp, "overridden")
+                )
+        for ts in want.get("trust-stores") or []:
+            if ts != have_dict["trust-stores"].get(ts.get("name")):
+                requests.append(
+                    {
+                        "path": trust_store_path + "=" + ts.get("name"),
+                        "method": PUT,
+                        "data": mk_ts_config(ts),
+                    }
+                )
+                commands.append(
+                    update_states(ts, "overridden")
+                )
 
         return commands, requests
 
     def _state_merged(self, want, have, diff):
-        """ The command generator when state is merged
+        """The command generator when state is merged
 
         :rtype: A list
         :returns: the commands necessary to merge the provided into
@@ -219,12 +262,20 @@ class Pki(ConfigBase):
         commands = diff or {}
         requests = []
 
-        for ts in commands.get('trust-stores') or []:
-            requests.append({"path": trust_store_path, "method": PATCH, "data": mk_ts_config(ts)})
-        
-        for sp in commands.get('security-profiles') or []:
-            requests.append({"path": security_profile_path, "method": PATCH, "data": mk_sp_config(sp)})
-        
+        for ts in commands.get("trust-stores") or []:
+            requests.append(
+                {"path": trust_store_path, "method": PATCH, "data": mk_ts_config(ts)}
+            )
+
+        for sp in commands.get("security-profiles") or []:
+            requests.append(
+                {
+                    "path": security_profile_path,
+                    "method": PATCH,
+                    "data": mk_sp_config(sp),
+                }
+            )
+
         if commands and requests:
             commands = update_states(commands, "merged")
         else:
@@ -233,7 +284,7 @@ class Pki(ConfigBase):
         return commands, requests
 
     def _state_deleted(self, want, have, diff):
-        """ The command generator when state is deleted
+        """The command generator when state is deleted
 
         :rtype: A list
         :returns: the commands necessary to remove the current configuration
@@ -241,22 +292,42 @@ class Pki(ConfigBase):
         """
         commands = []
         requests = []
-        current_ts = [ts.get('name') for ts in have.get('trust-stores') or [] if ts.get('name')]
-        current_sp = [sp.get('profile-name') for sp in have.get('security-profiles') or [] if sp.get('profile-name')]
+        current_ts = [
+            ts.get("name") for ts in have.get("trust-stores") or [] if ts.get("name")
+        ]
+        current_sp = [
+            sp.get("profile-name")
+            for sp in have.get("security-profiles") or []
+            if sp.get("profile-name")
+        ]
         if not want:
             commands = have
             for sp in current_sp:
-                requests.append({"path": security_profile_path + '=' + sp, "method": DELETE})
+                requests.append(
+                    {"path": security_profile_path + "=" + sp, "method": DELETE}
+                )
             for ts in current_ts:
-                requests.append({"path": trust_store_path + '=' + ts, "method": DELETE})
+                requests.append({"path": trust_store_path + "=" + ts, "method": DELETE})
         else:
             commands = want
             for sp in commands.get("security-profiles") or []:
-                if sp.get('profile-name') in current_sp:
-                    requests.append({"path": security_profile_path + '=' + sp.get('profile-name'), "method": DELETE})
+                if sp.get("profile-name") in current_sp:
+                    requests.append(
+                        {
+                            "path": security_profile_path
+                            + "="
+                            + sp.get("profile-name"),
+                            "method": DELETE,
+                        }
+                    )
             for ts in commands.get("trust-stores") or []:
-                if ts.get('name') in current_ts:
-                    requests.append({"path": trust_store_path + '=' + ts.get('profile-name'), "method": DELETE})
+                if ts.get("name") in current_ts:
+                    requests.append(
+                        {
+                            "path": trust_store_path + "=" + ts.get("profile-name"),
+                            "method": DELETE,
+                        }
+                    )
 
         if commands and requests:
             commands = update_states([commands], "deleted")
@@ -265,12 +336,20 @@ class Pki(ConfigBase):
 
         return commands, requests
 
+
 def mk_sp_config(indata):
-    outdata = {k: v for k,v in indata.items() if v != None}
-    output = {"openconfig-pki:security-profile": [{"profile-name": outdata.get("profile-name"), "config": outdata}]}
+    outdata = {k: v for k, v in indata.items() if v is not None}
+    output = {
+        "openconfig-pki:security-profile": [
+            {"profile-name": outdata.get("profile-name"), "config": outdata}
+        ]
+    }
     return output
 
+
 def mk_ts_config(indata):
-    outdata = {k: v for k,v in indata.items() if v != None}
-    output = {"openconfig-pki:trust-store": [{"name": outdata.get("name"), "config": outdata}]}
+    outdata = {k: v for k, v in indata.items() if v is not None}
+    output = {
+        "openconfig-pki:trust-store": [{"name": outdata.get("name"), "config": outdata}]
+    }
     return output
