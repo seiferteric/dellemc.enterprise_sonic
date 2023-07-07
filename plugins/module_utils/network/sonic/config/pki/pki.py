@@ -29,10 +29,10 @@ from ansible_collections.dellemc.enterprise_sonic.plugins.module_utils.network.s
 )
 
 
-trust_stores_path = "data/openconfig-pki:pki/trust-stores"
-security_profiles_path = "data/openconfig-pki:pki/security-profiles"
-trust_store_path = "data/openconfig-pki:pki/trust-stores/trust-store"
-security_profile_path = "data/openconfig-pki:pki/security-profiles/security-profile"
+TRUST_STORES_PATH = "data/openconfig-pki:pki/trust-stores"
+SECURITY_PROFILES_PATH = "data/openconfig-pki:pki/security-profiles"
+TRUST_STORE_PATH = "data/openconfig-pki:pki/trust-stores/trust-store"
+SECURITY_PROFILE_PATH = "data/openconfig-pki:pki/security-profiles/security-profile"
 
 PATCH = "patch"
 DELETE = "delete"
@@ -56,9 +56,6 @@ class Pki(ConfigBase):
     gather_network_resources = [
         "pki",
     ]
-
-    def __init__(self, module):
-        super(Pki, self).__init__(module)
 
     def get_pki_facts(self):
         """Get the 'facts' (the current configuration)
@@ -162,7 +159,7 @@ class Pki(ConfigBase):
         for sp in sps:
             requests.append(
                 {
-                    "path": security_profile_path + "=" + sp.get("profile-name"),
+                    "path": SECURITY_PROFILE_PATH + "=" + sp.get("profile-name"),
                     "method": PUT,
                     "data": mk_sp_config(sp),
                 }
@@ -170,7 +167,7 @@ class Pki(ConfigBase):
         for ts in tss:
             requests.append(
                 {
-                    "path": trust_store_path + "=" + ts.get("name"),
+                    "path": TRUST_STORE_PATH + "=" + ts.get("name"),
                     "method": PUT,
                     "data": mk_ts_config(ts),
                 }
@@ -214,7 +211,7 @@ class Pki(ConfigBase):
         for sp in have_sps:
             if sp not in want_sps:
                 requests.append(
-                    {"path": security_profile_path + "=" + sp, "method": DELETE}
+                    {"path": SECURITY_PROFILE_PATH + "=" + sp, "method": DELETE}
                 )
                 commands.append(
                     update_states(have_dict["security-profiles"][sp], "deleted")
@@ -222,14 +219,14 @@ class Pki(ConfigBase):
 
         for ts in have_tss:
             if ts not in want_tss:
-                requests.append({"path": trust_store_path + "=" + ts, "method": DELETE})
+                requests.append({"path": TRUST_STORE_PATH + "=" + ts, "method": DELETE})
                 commands.append(update_states(have_dict["trust-stores"][ts], "deleted"))
 
         for sp in want.get("security-profiles") or []:
             if sp != have_dict["security-profiles"].get(sp.get("profile-name")):
                 requests.append(
                     {
-                        "path": security_profile_path + "=" + sp.get("profile-name"),
+                        "path": SECURITY_PROFILE_PATH + "=" + sp.get("profile-name"),
                         "method": PUT,
                         "data": mk_sp_config(sp),
                     }
@@ -241,7 +238,7 @@ class Pki(ConfigBase):
             if ts != have_dict["trust-stores"].get(ts.get("name")):
                 requests.append(
                     {
-                        "path": trust_store_path + "=" + ts.get("name"),
+                        "path": TRUST_STORE_PATH + "=" + ts.get("name"),
                         "method": PUT,
                         "data": mk_ts_config(ts),
                     }
@@ -264,13 +261,13 @@ class Pki(ConfigBase):
 
         for ts in commands.get("trust-stores") or []:
             requests.append(
-                {"path": trust_store_path, "method": PATCH, "data": mk_ts_config(ts)}
+                {"path": TRUST_STORE_PATH, "method": PATCH, "data": mk_ts_config(ts)}
             )
 
         for sp in commands.get("security-profiles") or []:
             requests.append(
                 {
-                    "path": security_profile_path,
+                    "path": SECURITY_PROFILE_PATH,
                     "method": PATCH,
                     "data": mk_sp_config(sp),
                 }
@@ -304,17 +301,17 @@ class Pki(ConfigBase):
             commands = have
             for sp in current_sp:
                 requests.append(
-                    {"path": security_profile_path + "=" + sp, "method": DELETE}
+                    {"path": SECURITY_PROFILE_PATH + "=" + sp, "method": DELETE}
                 )
             for ts in current_ts:
-                requests.append({"path": trust_store_path + "=" + ts, "method": DELETE})
+                requests.append({"path": TRUST_STORE_PATH + "=" + ts, "method": DELETE})
         else:
             commands = want
             for sp in commands.get("security-profiles") or []:
                 if sp.get("profile-name") in current_sp:
                     requests.append(
                         {
-                            "path": security_profile_path
+                            "path": SECURITY_PROFILE_PATH
                             + "="
                             + sp.get("profile-name"),
                             "method": DELETE,
@@ -324,7 +321,7 @@ class Pki(ConfigBase):
                 if ts.get("name") in current_ts:
                     requests.append(
                         {
-                            "path": trust_store_path + "=" + ts.get("profile-name"),
+                            "path": TRUST_STORE_PATH + "=" + ts.get("profile-name"),
                             "method": DELETE,
                         }
                     )
